@@ -1,0 +1,16 @@
+# Dependencias para correr mixemt (bin/17_summarize_mixemt.R depende de esto).
+# Uso:
+#   python3 -m venv tools/mixemt_venv
+#   source tools/mixemt_venv/bin/activate
+#   pip install -r tools/mixemt_requirements.txt
+#   git clone https://github.com/svohr/mixemt.git tools/mixemt
+#   pip install -e tools/mixemt
+#
+# setuptools<81 es necesario: mixemt usa pkg_resources internamente, que
+# setuptools removio de versiones recientes (>=81). Sin este pin, `mixemt`
+# falla con "ModuleNotFoundError: No module named 'pkg_resources'".
+setuptools<81
+pysam
+numpy
+scipy
+biopython

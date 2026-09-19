@@ -1,0 +1,96 @@
+# ============================================================================
+# Ancestria — .gitignore
+#
+# Policy: CODE ONLY. No raw/derived sequencing data (genomic data from real
+# patients/participants, requires a controlled-access repository like
+# dbGaP/EGA — see DATA_AVAILABILITY.md) and no results/manuscript/figures
+# (generated locally by running the pipeline, not committed).
+# ============================================================================
+
+# ── Raw sequencing data (real patients/participants) ───────────────────────
+bam/
+*.bam
+*.bam.bai
+*.cram
+*.cram.crai
+
+# ── Results, manuscript, and deliverables (code-only repo policy) ──────────
+# Per project decision: this repository ships CODE only. Results, figures,
+# tables, and the manuscript are generated locally by running the pipeline
+# (see bin/README_VIGENTE.md) but are not committed here.
+out_global/
+entregable_VCF/
+manuscrito_G3/
+results/
+docs/
+work/
+
+# ── Large public reference downloads (reconstructible, don't upload) ───────
+data/ref/*.fasta
+data/ref/*.fasta.fai
+data/ref/*.dict
+data/vcf/
+*.vcf.gz
+*.vcf.gz.tbi
+*.vcf
+
+# ── Third-party tools vendored as full git repos ────────────────────────────
+# Rebuilt via `git clone` + checkout to the exact commit documented in
+# README.md, not vendored here (avoids nested git repos and useless bulk).
+tools/angsd_src/
+tools/varscan/*.jar
+tools/mixemt/
+tools/mixemt_venv/
+data/iadmix/
+
+# ── Failed downloads / junk / loose root-level duplicates ──────────────────
+# (all of these are exact copies of what's already organized under
+# manuscrito_G3/ — which itself is excluded above — or obsolete scratch
+# files, verified with diff during the audit)
+data/hgdp/
+.freq
+bin/.RData
+Articulo_Ancestria.docx
+Articulo_Ancestria.md
+Articulo_Draft.docx
+Articulo_Final.md
+Delta11.png
+DeltaN5.png
+Deviation from full data estimates n10.png
+Downsampling stability (N10).png
+Downsampling stability (N11).png
+Downsampling stability (N5).png
+Fig N10-N11
+Fig N10-N11-4
+Fig N5
+Fig N5-1
+Fig_iAdmix_barplots2_doublecol.png
+Fig_iAdmix_barplots_doublecol.png
+Generaltables.tsv
+Generaltables.xls
+Mainfig
+Mainfig2
+Presentacion.md
+Presentacion_Completa.md
+Presentacion_Completa.pptx
+Reporte.odt
+Reporte3.docx
+Reporte4.docx
+Reporte4.md
+Reporte_ANGSD_Metodologia.docx
+Reporte_ANGSD_Metodologia.md
+Reporte_ANGSD_MetodologiaA.docx
+Resumen_Ejecutivo.docx
+Resumen_Ejecutivo.md
+WORKFLOW.md
+raw_results.tsv
+summary_mean_sd.tsv
+nuevoshallazgos.ods
+
+# ── Claude Code session / editor / system files (not part of the project) ──
+.claude/
+.DS_Store
+**/.DS_Store
+~$*.docx
+Rplots.pdf
+*.Rhistory
