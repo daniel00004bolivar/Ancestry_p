@@ -43,6 +43,52 @@ tools/mixemt/
 tools/mixemt_venv/
 data/iadmix/
 
+# ── Scripts not used to build the manuscript ────────────────────────────────
+# Kept locally for traceability, not published: obsolete/duplicate pipeline
+# iterations (bin/archive/), the iAdmix/GATK pipeline (out of scope, not
+# used for this article's results), superseded analyses, and the X/Y
+# chromosome extensions that failed validation (see bin/README_VIGENTE.md
+# git history for why).
+bin/archive/
+bin/00_make_sample_lists.sh
+bin/00_run_all.sh
+bin/01_gatk_genome.sh
+bin/01_make_af_if_needed.sh
+bin/02_build_panel_genome.sh
+bin/03_iadmix_genome.sh
+bin/03_make_report.R
+bin/04_distances_genome.sh
+bin/05a_fst_from_maf.R
+bin/05b_compare_angsd_iadmix.R
+bin/13_pca_3d.R
+bin/18_build_X_panel_and_run.sh
+bin/19_y_haplogroup_mixture.R
+bin/19a_prepare_y_markers_and_counts.sh
+bin/analyze_results.py
+bin/barplot ancestry.R
+bin/build_final_from_af_tsv.sh
+bin/build_panel_from_cache.sh
+bin/build_panel_streaming.sh
+bin/build_panels_master.sh
+bin/build_panels_master_fixed.sh
+bin/complete_run5.sh
+bin/curves.R
+bin/download_1kgp_phase3.sh
+bin/iadmix_master_script.sh
+bin/retomar.sh
+bin/run_bootstrap.sh
+bin/run_distances_N3_N11.sh
+bin/run_iadmix_10runs_3way.sh
+bin/run_iadmix_3way_10runs_FIXED.sh
+bin/run_iadmix_5runs_N11.sh
+bin/run_iadmix_5runs_N11_FULL.sh
+bin/run_iadmix_genome.sh
+bin/run_iadmix_multi_panels.sh
+bin/run_iadmix_runs_6_7.sh
+bin/run_iadmix_vcf.sh
+bin/run_one_evanno.sh
+bin/README_PIPELINE.md
+
 # ── Failed downloads / junk / loose root-level duplicates ──────────────────
 # (all of these are exact copies of what's already organized under
 # manuscrito_G3/ — which itself is excluded above — or obsolete scratch

@@ -17,8 +17,9 @@ are generated locally by running the pipeline.
 
 ## What IS in this repository
 
-Only `bin/` (all pipeline code), `env.sh`, and top-level documentation
-(`README.md`, this file, `bin/README_VIGENTE.md`).
+Only `bin/` (the scripts that built the manuscript — see
+`bin/README_VIGENTE.md`), `env.sh`, `data/panel/` (public 1000 Genomes
+sample metadata), and top-level documentation (`README.md`, this file).
 
 ## Requesting the raw data
 

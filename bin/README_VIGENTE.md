@@ -1,89 +1,78 @@
-# Current scripts, by pipeline step
+# Pipeline used to build the manuscript
 
-This file exists because `bin/` accumulated ~30 obsolete/duplicate
-iterations (`_v2`, `_FIXED`, `_BACKUP`, `_ORIGINAL`, `(copia)`) with no clear
-indication of which version was actually in use. Those versions were moved
-to `archive/` (not deleted). This table says which one to run at each step.
+This repository contains **only the scripts that generated the tables and
+figures in the manuscript** (`manuscrito_G3/manuscript_en/manuscript_full.md`
+and the extended `manuscript_full_v2_with_new_results.md`, not included in
+this code-only repo — see `DATA_AVAILABILITY.md`). Everything else audited
+during development (obsolete iterations, the iAdmix/GATK pipeline, and the
+chromosome X/Y extensions that failed validation) was intentionally left
+out — see `.gitignore` for the full excluded list and the reasoning.
 
-## ANGSD / NGSadmix / PCAngsd pipeline (audited, current)
+## Pipeline, in run order
 
-| Step | Current script | What it does |
+| Step | Script | What it produces |
 |---|---|---|
-| 05 | `05_angsd_analysis.sh` | Genotype likelihoods, ACGT counts, IBS, SAF/SFS per pool |
-| 05a | `05a_fst_from_counts.R` | Hudson-Bhatia F<sub>ST</sub> from counts (pool-safe, no diploid assumption) |
-| 05b | `05b_compare_angsd_iadmix.R` | Compares ANGSD vs. iAdmix results |
-| 05c | `05c_continental_ancestry_v3.R` | Continental AIMs from counts (the only version cited in WORKFLOW.md) |
-| 05d | `05d_fst_per_population.R` | F<sub>ST</sub> per reference population |
-| 06 | `06_build_5pop_panel.sh` | Builds a 5-superpopulation reference panel from 1000G |
-| 07 | `07b_build_ref_beagle_v2.R` | Builds the reference Beagle (v2 = current, supersedes `07_build_ref_beagle.R`) |
-| 08 | `08b_merge_beagle_ngsadmix_v2.R` | Merges pools + reference Beagle, runs NGSadmix (v2 = current) |
-| 09 | `09b_plot_admixture_pca_v2.R` | PCAngsd + admixture plots (v2 = current) |
-| 10 | `10_evanno_deltaK.R` | Evanno method for choosing K |
-| 11 | `11_full_genome_panels.sh` | Full-genome panels |
-| 12 | `12_rebuild_and_run.sh` | Full rebuild (portability fixed in this audit) |
-| 13 | `13_pca_3d.R` | 3D PCA |
-| 14 | `14_pool_focused_plots.R` | Pool-focused plots |
-| 15 | `15_final_figures.R` | Final manuscript figures |
-| 16 | `16_pool_replicates.sh` + `16b_summarize_replicates.R` | **New** — uncertainty quantification via chromosome block jackknife (see `results/pool_jackknife_summary.tsv`) |
-| — | `05_angsd_analysis.sh --chr X` | **New, validated** — F<sub>ST</sub>/counts on chromosome X (see `out_global/angsd_X/fst/`) |
-| 18 | `18_build_X_panel_and_run.sh` | **New, NOT validated** — full NGSadmix/PCAngsd pipeline on X. See status detail below. Do not use these numbers. |
-| 17 | `17_summarize_mixemt.R` | **New, complete** — mtDNA haplogroups via `mixemt` (see `results/mtdna_haplogroups.tsv`) |
-| 19a | `19a_prepare_y_markers_and_counts.sh` | **New, NOT validated** — downloads Y VCF, selects markers, ANGSD counts per pool |
-| 19 | `19_y_haplogroup_mixture.R` | **New, NOT validated** — Y-chromosome mixture deconvolution (needs 19a first). See `docs/Y_HAPLOGROUP_STATUS.md`. Do not use these numbers. |
+| 1 | `05_angsd_analysis.sh` | Per-pool allele frequencies, ACGT counts, IBS, SAF/SFS (autosomes; also supports `--chr X` for the chromosome X F<sub>ST</sub> result) |
+| 2 | `05a_fst_from_counts.R` | Table 4 — inter-pool F<sub>ST</sub> (Hudson-Bhatia, from counts) |
+| 3 | `06_build_5pop_panel.sh` | F<sub>ST</sub> reference panel: HapMap3 (8 pops) + 1KGP (5 superpopulations) |
+| 4 | `05c_continental_ancestry_v3.R` | Continental AIMs from counts |
+| 5 | `05d_fst_per_population.R` | Tables 5-6 — F<sub>ST</sub> vs. 5 superpopulations and 13 individual reference populations |
+| 6 | `11_full_genome_panels.sh` | Full-genome (chr1-22) 1KGP genotype extraction for the NGSadmix reference panels |
+| 7 | `07_build_ref_beagle.R` | Continental reference Beagle (100 individuals, 5 superpopulations) |
+| 8 | `07b_build_ref_beagle_v2.R` | Granular reference Beagle (110 individuals, 11 populations) |
+| 9 | `08_merge_beagle_ngsadmix.R` | Merges pools + continental reference Beagle |
+| 10 | `08b_merge_beagle_ngsadmix_v2.R` | Merges pools + granular reference Beagle |
+| 11 | `12_rebuild_and_run.sh` | Full pipeline: rebuilds both reference Beagles, merges, runs NGSadmix (K=2-5 continental, K=2-11 granular) and PCAngsd, runs Evanno replicates |
+| 12 | `10_evanno_deltaK.R` | Table 11 — Evanno ΔK method for optimal K |
+| 13 | `09_plot_admixture_pca.R` | Figures 3-4 — continental (K=5) admixture + PCA plots |
+| 14 | `09b_plot_admixture_pca_v2.R` | Figures 5-6 — granular (K=6) admixture + PCA plots |
+| 15 | `14_pool_focused_plots.R` | Pool-composition plots from the K=5 result |
+| 16 | `15_final_figures.R` | Final manuscript figure set |
+| 17 | `16_pool_replicates.sh` + `16b_summarize_replicates.R` | Table 8b, Figure 11 — jackknife uncertainty for the K=5 proportions |
+| 18 | `17_summarize_mixemt.R` (+ `mixemt` install) | Table 13, Figure 13 — mitochondrial haplogroup composition |
+| 19 | `20_new_findings_figures.R` | Figures 11-13 — jackknife, chromosome X F<sub>ST</sub>, and mtDNA figures |
 
-### Detail: NGSadmix/PCAngsd on chromosome X (exploratory, not validated)
+`lib_build_ref_beagle_panel.R` is a shared helper used by steps 7-11 (not run
+directly).
 
-A pipeline extending NGSadmix/PCAngsd to chromosome X was built from
-scratch, since the autosomal HapMap3 panel has no X coverage. Reproducible
-with **`bin/18_build_X_panel_and_run.sh`** (requires
-`bin/05_angsd_analysis.sh --chr X` to have run first). Produces:
-- `work/angsd_X_panel/sites_X.txt` — de novo sites from ANGSD's per-pool MAF calls
-- `out_global/angsd_X/ngsadmix/pools_X.beagle.gz` + `refX.beagle` + `combined_X.beagle.gz`
-- `out_global/angsd_X/ngsadmix/results/K5_X.qopt`, `out_global/angsd_X/pcangsd/pca_X.cov`
+## Software versions and setup
 
-The numeric result **fails a basic sanity check** (all three pools come out
-nearly identical, contradicting chromosome X's own F<sub>ST</sub> and every
-other line of evidence) and PCAngsd did not converge. Full detail and likely
-cause in `docs/NGSADMIX_X_STATUS.md`. The pipeline is reusable
-for a retry with better marker selection, but the current numbers **are
-not** in any results document or in the manuscript.
+See `README.md` for exact tool versions (ANGSD, PCAngsd, bcftools/samtools,
+R, mixemt) and installation commands.
+
+## What's excluded, and why
+
+- **`bin/archive/`** and a long tail of duplicate/superseded scripts
+  (different pool sizes, filters, backups) — obsolete iterations found
+  during a code audit, never the version actually used.
+- **The iAdmix/GATK pipeline** (`iadmix_master_script.sh`, `run_iadmix_*.sh`,
+  `00`-`04` numbered scripts, etc.) — a complementary method whose results
+  are explicitly *not* part of this manuscript (mentioned only as "available
+  as separate supplementary material").
+- **`05a_fst_from_maf.R`** — an earlier F<sub>ST</sub> approach (MAF-based)
+  superseded by the counts-based `05a_fst_from_counts.R` actually used.
+- **`05b_compare_angsd_iadmix.R`**, **`13_pca_3d.R`** — exploratory analyses
+  not cited in the manuscript.
+- **`18_build_X_panel_and_run.sh`, `19a_prepare_y_markers_and_counts.sh`,
+  `19_y_haplogroup_mixture.R`** — extensions to chromosomes X and Y built
+  and run during the audit, but their results failed a basic sanity check
+  (see git history / commit messages for the full explanation) and are not
+  in the manuscript.
 
 ## ⚠️ Methodological limitation: pools treated as diploid pseudo-individuals
 
 `NGSadmix` and `PCAngsd` consume the Beagle format, which encodes only 3
-states per site (AA/Aa/aa) — i.e., it is diploid by design. Each pool
-(POOL1/POOL2/HOSPITAL, ~50 real individuals each) is represented as **a
-single diploid pseudo-individual**, not as a weighted population frequency.
-This is not a bug fixable with a flag: there is no way to tell
-NGSadmix/PCAngsd "this is a pool of 50 people."
+states per site (AA/Aa/aa) — diploid by design. Each pool (POOL1/POOL2/
+HOSPITAL, ~50 real individuals each) is represented as **a single diploid
+pseudo-individual**, not a weighted population frequency. This is not a bug
+fixable with a flag — there is no way to tell NGSadmix/PCAngsd "this is a
+pool of 50 people."
 
 - Analyses based on direct ACGT counts (`05a_fst_from_counts.R`,
-  `05c_continental_ancestry_v3.R`) **do not have this problem** — they
-  compute allele frequency without ever going through a genotype.
-- `05_angsd_analysis.sh --dumpCounts 3 -doMajorMinor 4` (the counts block)
-  also avoids the problem.
+  `05c_continental_ancestry_v3.R`) **do not have this problem**.
 - `bin/16_pool_replicates.sh` quantifies uncertainty via a delete-one-
-  chromosome block jackknife (22 replicates) on the same Beagle used for the
-  published K=5 result. It does **not** correct the underlying pseudo-
-  individual bias — it only measures how much the estimate varies with
-  which part of the genome is used. Read-subsampling to build individual-
-  depth pseudo-replicates (analogous to iAdmix's 10-run bootstrap) was
-  attempted first and abandoned: real combined pool depth is only ~3-4x, far
-  too low to subsample into individual-depth replicates.
+  chromosome block jackknife (22 replicates). It does **not** correct the
+  underlying pseudo-individual bias — it only measures how much the
+  estimate varies with which part of the genome is used.
 
-See the header comment in each script listed above for the full warning
-text.
-
-## bin/archive/
-
-Contains the ~30 obsolete/duplicate versions moved during this cleanup
-(panel-building scripts with different pool sizes/filters, backups,
-copies). Kept intact for traceability, but should not be used to generate
-new results — use the table above.
-
-## Out of scope
-
-The `iAdmix` scripts (`iadmix_master_script.sh`, `run_iadmix_*.sh`,
-`03_iadmix_genome.sh`, etc.) were not audited in depth in this work — they
-were explicitly excluded from scope. Only their obvious duplicates were
-archived as general housekeeping.
+See the header comment in each script for the full warning text.
