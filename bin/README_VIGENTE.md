@@ -8,6 +8,44 @@ during development (obsolete iterations, the iAdmix/GATK pipeline, and the
 chromosome X/Y extensions that failed validation) was intentionally left
 out — see `.gitignore` for the full excluded list and the reasoning.
 
+## Pipeline map
+
+Inputs: 3 pool BAMs (POOL1, POOL2, HOSPITAL) and 1000 Genomes Phase 3
+(public, streamed remotely). Four stages, run top to bottom; arrows inside
+each stage are run order, `→` labels are what lands in the manuscript.
+
+```mermaid
+flowchart TD
+    subgraph S1["① Differentiation — how different are the pools?"]
+        direction TB
+        s1a["05_angsd_analysis.sh"] --> s1b["05a_fst_from_counts.R<br/>→ Table 4"]
+        s1c["06_build_5pop_panel.sh"] --> s1d["05c_continental_ancestry_v3.R"] --> s1e["05d_fst_per_population.R<br/>→ Tables 5–6"]
+    end
+
+    subgraph S2["② Reference panels — prep 1000G as a yardstick"]
+        direction TB
+        s2a["11_full_genome_panels.sh"] --> s2b["07_build_ref_beagle.R"] --> s2d["08_merge_beagle_ngsadmix.R"]
+        s2a --> s2c["07b_build_ref_beagle_v2.R"] --> s2e["08b_merge_beagle_ngsadmix_v2.R"]
+    end
+
+    subgraph S3["③ Core ancestry — the paper's central result"]
+        direction TB
+        s3a["12_rebuild_and_run.sh"] --> s3b["10_evanno_deltaK.R<br/>→ Table 11"]
+        s3a --> s3c["09_plot_admixture_pca.R<br/>→ Figures 3–4"] --> s3e["14_pool_focused_plots.R"] --> s3f["15_final_figures.R"]
+        s3a --> s3d["09b_plot_admixture_pca_v2.R<br/>→ Figures 5–6"]
+    end
+
+    subgraph S4["④ New findings — this audit"]
+        direction TB
+        s4a["16_pool_replicates.sh + 16b<br/>→ Table 8b, Fig 11"]
+        s4b["17_summarize_mixemt.R<br/>→ Table 13, Fig 13"]
+        s4a --> s4c["20_new_findings_figures.R<br/>→ Figures 11–13"]
+        s4b --> s4c
+    end
+
+    S1 --> S2 --> S3 --> S4
+```
+
 ## Pipeline, by script number
 
 The number in each filename is its position in the original, larger
