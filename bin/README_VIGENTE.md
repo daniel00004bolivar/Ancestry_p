@@ -8,32 +8,40 @@ during development (obsolete iterations, the iAdmix/GATK pipeline, and the
 chromosome X/Y extensions that failed validation) was intentionally left
 out — see `.gitignore` for the full excluded list and the reasoning.
 
-## Pipeline, in run order
+## Pipeline, by script number
 
-| Step | Script | What it produces |
-|---|---|---|
-| 1 | `05_angsd_analysis.sh` | Per-pool allele frequencies, ACGT counts, IBS, SAF/SFS (autosomes; also supports `--chr X` for the chromosome X F<sub>ST</sub> result) |
-| 2 | `05a_fst_from_counts.R` | Table 4 — inter-pool F<sub>ST</sub> (Hudson-Bhatia, from counts) |
-| 3 | `06_build_5pop_panel.sh` | F<sub>ST</sub> reference panel: HapMap3 (8 pops) + 1KGP (5 superpopulations) |
-| 4 | `05c_continental_ancestry_v3.R` | Continental AIMs from counts |
-| 5 | `05d_fst_per_population.R` | Tables 5-6 — F<sub>ST</sub> vs. 5 superpopulations and 13 individual reference populations |
-| 6 | `11_full_genome_panels.sh` | Full-genome (chr1-22) 1KGP genotype extraction for the NGSadmix reference panels |
-| 7 | `07_build_ref_beagle.R` | Continental reference Beagle (100 individuals, 5 superpopulations) |
-| 8 | `07b_build_ref_beagle_v2.R` | Granular reference Beagle (110 individuals, 11 populations) |
-| 9 | `08_merge_beagle_ngsadmix.R` | Merges pools + continental reference Beagle |
-| 10 | `08b_merge_beagle_ngsadmix_v2.R` | Merges pools + granular reference Beagle |
-| 11 | `12_rebuild_and_run.sh` | Full pipeline: rebuilds both reference Beagles, merges, runs NGSadmix (K=2-5 continental, K=2-11 granular) and PCAngsd, runs Evanno replicates |
-| 12 | `10_evanno_deltaK.R` | Table 11 — Evanno ΔK method for optimal K |
-| 13 | `09_plot_admixture_pca.R` | Figures 3-4 — continental (K=5) admixture + PCA plots |
-| 14 | `09b_plot_admixture_pca_v2.R` | Figures 5-6 — granular (K=6) admixture + PCA plots |
-| 15 | `14_pool_focused_plots.R` | Pool-composition plots from the K=5 result |
-| 16 | `15_final_figures.R` | Final manuscript figure set |
-| 17 | `16_pool_replicates.sh` + `16b_summarize_replicates.R` | Table 8b, Figure 11 — jackknife uncertainty for the K=5 proportions |
-| 18 | `17_summarize_mixemt.R` (+ `mixemt` install) | Table 13, Figure 13 — mitochondrial haplogroup composition |
-| 19 | `20_new_findings_figures.R` | Figures 11-13 — jackknife, chromosome X F<sub>ST</sub>, and mtDNA figures |
+The number in each filename is its position in the original, larger
+pipeline (00-20). Numbers 00-04, 13, 18, and 19 are intentionally absent —
+see "What's excluded" below for why. Letters (`a`/`b`/`c`/`d`) mark
+variants of the same numbered step (e.g. `07` and `07b` are the continental
+and granular versions of the same reference-Beagle step), not new steps.
+The table is ordered by actual run order, which mostly but not strictly
+follows the numbers (`06` needs to run before `05c`/`05d`, for example).
 
-`lib_build_ref_beagle_panel.R` is a shared helper used by steps 7-11 (not run
-directly).
+| Script | What it produces |
+|---|---|
+| `05_angsd_analysis.sh` | Per-pool allele frequencies, ACGT counts, IBS, SAF/SFS (autosomes; also supports `--chr X` for the chromosome X F<sub>ST</sub> result) |
+| `05a_fst_from_counts.R` | Table 4 — inter-pool F<sub>ST</sub> (Hudson-Bhatia, from counts) |
+| `06_build_5pop_panel.sh` | F<sub>ST</sub> reference panel: HapMap3 (8 pops) + 1KGP (5 superpopulations) |
+| `05c_continental_ancestry_v3.R` | Continental AIMs from counts |
+| `05d_fst_per_population.R` | Tables 5-6 — F<sub>ST</sub> vs. 5 superpopulations and 13 individual reference populations |
+| `11_full_genome_panels.sh` | Full-genome (chr1-22) 1KGP genotype extraction for the NGSadmix reference panels |
+| `07_build_ref_beagle.R` | Continental reference Beagle (100 individuals, 5 superpopulations) |
+| `07b_build_ref_beagle_v2.R` | Granular reference Beagle (110 individuals, 11 populations) |
+| `08_merge_beagle_ngsadmix.R` | Merges pools + continental reference Beagle |
+| `08b_merge_beagle_ngsadmix_v2.R` | Merges pools + granular reference Beagle |
+| `12_rebuild_and_run.sh` | Full pipeline: rebuilds both reference Beagles, merges, runs NGSadmix (K=2-5 continental, K=2-11 granular) and PCAngsd, runs Evanno replicates |
+| `10_evanno_deltaK.R` | Table 11 — Evanno ΔK method for optimal K |
+| `09_plot_admixture_pca.R` | Figures 3-4 — continental (K=5) admixture + PCA plots |
+| `09b_plot_admixture_pca_v2.R` | Figures 5-6 — granular (K=6) admixture + PCA plots |
+| `14_pool_focused_plots.R` | Pool-composition plots from the K=5 result |
+| `15_final_figures.R` | Final manuscript figure set |
+| `16_pool_replicates.sh` + `16b_summarize_replicates.R` | Table 8b, Figure 11 — jackknife uncertainty for the K=5 proportions |
+| `17_summarize_mixemt.R` (+ `mixemt` install) | Table 13, Figure 13 — mitochondrial haplogroup composition |
+| `20_new_findings_figures.R` | Figures 11-13 — jackknife, chromosome X F<sub>ST</sub>, and mtDNA figures |
+
+`lib_build_ref_beagle_panel.R` is a shared helper used by `07`/`07b`/`11`/`12`
+(not run directly).
 
 ## Software versions and setup
 
