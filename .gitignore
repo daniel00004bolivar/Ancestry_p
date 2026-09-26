@@ -140,3 +140,6 @@ nuevoshallazgos.ods
 ~$*.docx
 Rplots.pdf
 *.Rhistory
+
+# Paquete de intermedios para compartir en privado (datos derivados de participantes)
+archivos_intermedios/

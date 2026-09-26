@@ -20,7 +20,7 @@
 # problem remains -- each pool is ONE diploid pseudo-individual in the
 # Beagle. The jackknife quantifies how much the estimate varies depending
 # on which genome region is used; it does NOT correct the structural bias
-# of treating a pool of ~50 people as 2 chromosome copies. See
+# of treating a pool of 50-200 people as 2 chromosome copies. See
 # bin/README_VIGENTE.md.
 #
 # Usage: bash bin/16_pool_replicates.sh [--k 5] [--threads 4]

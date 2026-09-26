@@ -8,7 +8,7 @@
 # Requisitos: tabix (htslib), internet, ~10 minutos
 #
 # METHODOLOGICAL WARNING: this panel feeds NGSadmix/PCAngsd (bin/08*,
-# bin/09*), which represent each pool (POOL1/POOL2/HOSPITAL, ~50 real
+# bin/09*), which represent each pool (POOL1/POOL2/HOSPITAL: 50/50/200 real
 # individuals each) as ONE diploid pseudo-individual -- a structural
 # limitation of the Beagle format, not configurable. See
 # bin/README_VIGENTE.md and bin/16_pool_replicates.sh.

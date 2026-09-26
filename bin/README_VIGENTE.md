@@ -109,7 +109,7 @@ R, mixemt) and installation commands.
 
 `NGSadmix` and `PCAngsd` consume the Beagle format, which encodes only 3
 states per site (AA/Aa/aa) — diploid by design. Each pool (POOL1/POOL2/
-HOSPITAL, ~50 real individuals each) is represented as **a single diploid
+HOSPITAL: 50, 50 and 200 real individuals) is represented as **a single diploid
 pseudo-individual**, not a weighted population frequency. This is not a bug
 fixable with a flag — there is no way to tell NGSadmix/PCAngsd "this is a
 pool of 50 people."
@@ -122,3 +122,24 @@ pool of 50 people."
   estimate varies with which part of the genome is used.
 
 See the header comment in each script for the full warning text.
+
+## Revised analysis (Phase 2 of the September 2026 revision memo)
+
+Scripts `30`–`39` replace the ancestry and differentiation results above as
+primary evidence; NGSadmix/PCAngsd (`07`–`15`) become exploratory. Run all of
+it with `bash bin/39_run_revision.sh`. Outputs go to `out_global/revision/`.
+
+| Script | What it does | Memo items |
+|---|---|---|
+| `30_build_oriented_sites.R` | 640k HGDP SNPs coded once as ancestral/derived; unadmixed proxies AFR (Yoruba, Mandenka), EUR (French, Basque, Italian, Tuscan, Sardinian), NAT (Maya, Pima, Karitiana, Surui, Colombian) | A4, A7 |
+| `31_extract_pool_counts.sh` | ACGT read counts of each pool at those sites, zeros kept | A5 |
+| `32_build_common_mask.R` | One mask for every pool and analysis; QC summary | A6, C1 |
+| `33_ancestry_counts.R` | Beta-binomial ancestry model with real pool sizes, block jackknife, Delta_HUN and POOL1-POOL2, effective pool sizes | A2, A9 |
+| `34_fst_poolfstat.R` | poolfstat ANOVA FST with block jackknife | A3 |
+| `35_depth_matched.R` | Site-by-site depth matching (hypergeometric thinning) | A10 |
+| `36_sensitivity.R` | Transversions, depth/QC/MAF filters, alternative proxies, block size, reference-bias diagnostic | S7, S8 |
+| `37_simulate_validation.R` | Simulation of the full design; writes a small synthetic test set | A8, C5 |
+| `38_fst_references.R` | Pool-vs-HGDP Hudson FST on the common mask (supplement) | A6 |
+| `lib_poolmix.R` | Shared model, jackknife and block helpers | — |
+
+Pool sizes used everywhere: POOL1 = 50, POOL2 = 50, HOSPITAL = 200 people.
