@@ -1,145 +1,171 @@
-# Pipeline used to build the manuscript
+# Pipeline
 
-This repository contains **only the scripts that generated the tables and
-figures in the manuscript** (`manuscrito_G3/manuscript_en/manuscript_full.md`
-and the extended `manuscript_full_v2_with_new_results.md`, not included in
-this code-only repo — see `DATA_AVAILABILITY.md`). Everything else audited
-during development (obsolete iterations, the iAdmix/GATK pipeline, and the
-chromosome X/Y extensions that failed validation) was intentionally left
-out — see `.gitignore` for the full excluded list and the reasoning.
+Code for the pooled-sequencing ancestry analysis of three cohorts from
+Barranquilla, Colombia. Everything here runs from the repository root.
 
-## Pipeline map
+The repository is **code only**: no sequencing data, no derived per-site data,
+no results. See `DATA_AVAILABILITY.md` for what can and cannot be reproduced,
+and for the controlled-access route to the underlying alignments.
 
-Inputs: 3 pool BAMs (POOL1, POOL2, HOSPITAL) and 1000 Genomes Phase 3
-(public, streamed remotely). Four stages, run top to bottom; arrows inside
-each stage are run order, `→` labels are what lands in the manuscript.
+## Pipeline at a glance
 
 ```mermaid
 flowchart TD
-    subgraph S1["① Differentiation — how different are the pools?"]
-        direction TB
-        s1a["05_angsd_analysis.sh"] --> s1b["05a_fst_from_counts.R<br/>→ Table 4"]
-        s1c["06_build_5pop_panel.sh"] --> s1d["05c_continental_ancestry_v3.R"] --> s1e["05d_fst_per_population.R<br/>→ Tables 5–6"]
+    subgraph IN[" Inputs "]
+        direction LR
+        BAM["bam/<br/>3 pooled alignments"]
+        REF["data/ref/<br/>GRCh37 b37"]
+        HGDP["data/hgdp/<br/>HGDP frequencies"]
     end
 
-    subgraph S2["② Reference panels — prep 1000G as a yardstick"]
+    subgraph PREP["1 · Data preparation"]
         direction TB
-        s2a["11_full_genome_panels.sh"] --> s2b["07_build_ref_beagle.R"] --> s2d["08_merge_beagle_ngsadmix.R"]
-        s2a --> s2c["07b_build_ref_beagle_v2.R"] --> s2e["08b_merge_beagle_ngsadmix_v2.R"]
+        S05["05_angsd_analysis.sh<br/><i>A/C/G/T counts per site</i>"]
+        S30["30_build_oriented_sites.R<br/><i>640k SNPs, fixed orientation,<br/>unadmixed proxies</i>"]
+        S31["31_extract_pool_counts.sh<br/><i>counts at those sites, zeros kept</i>"]
+        S32["32_build_common_mask.R<br/><i>one mask: 47,813 SNPs</i>"]
+        S05 --> S31
+        S30 --> S31 --> S32
     end
 
-    subgraph S3["③ Core ancestry — the paper's central result"]
-        direction TB
-        s3a["12_rebuild_and_run.sh"] --> s3b["10_evanno_deltaK.R<br/>→ Table 11"]
-        s3a --> s3c["09_plot_admixture_pca.R<br/>→ Figures 3–4"] --> s3e["14_pool_focused_plots.R"] --> s3f["15_final_figures.R"]
-        s3a --> s3d["09b_plot_admixture_pca_v2.R<br/>→ Figures 5–6"]
+    subgraph EST["2 · Estimation"]
+        direction LR
+        S33["33_ancestry_counts.R<br/><i>ancestry, contrasts,<br/>effective pool size</i><br/>→ Tables 2-3"]
+        S34["34_fst_poolfstat.R<br/><i>Pool-seq FST</i><br/>→ Table S1"]
     end
 
-    subgraph S4["④ New findings — this audit"]
-        direction TB
-        s4a["16_pool_replicates.sh + 16b<br/>→ Table 8b, Fig 11"]
-        s4b["17_summarize_mixemt.R<br/>→ Table 13, Fig 13"]
-        s4a --> s4c["20_new_findings_figures.R<br/>→ Figures 11–13"]
-        s4b --> s4c
+    subgraph CTRL["3 · Controls"]
+        direction LR
+        S35["35_depth_matched.R<br/><i>then 33 + 34 again</i>"]
+        S36["36_sensitivity.R<br/><i>14 analyses</i><br/>→ Figure S1"]
+        S38["38_fst_references.R<br/><i>vs 17 HGDP populations</i><br/>→ Table S4"]
     end
 
-    S1 --> S2 --> S3 --> S4
+    subgraph VAL["4 · Validation"]
+        direction LR
+        S37["37_simulate_validation.R<br/><i>are the intervals calibrated?</i><br/>→ Figure 1B"]
+        S42["42_validate_neff.R<br/><i>does it recover a known truth?</i>"]
+        S43["43_neff_uncertainty.R<br/><i>how precise is it?</i>"]
+        S44["44_iadmix_crosscheck.sh<br/><i>independent implementation</i>"]
+        S45["45_iadmix_stability.sh<br/><i>stable to setup choices?</i>"]
+    end
+
+    BAM --> S05
+    REF --> S30
+    HGDP --> S30
+    S32 --> EST
+    EST --> CTRL
+    CTRL --> VAL
+
+    EXP["<b>Exploratory, supplement only</b><br/>06-15 · NGSadmix + PCAngsd<br/><i>each pool as one diploid<br/>pseudo-individual</i>"]
+    S05 -.-> EXP
+
+    classDef main fill:#e8f0f7,stroke:#2a4d69
+    classDef expl fill:#f2f2f0,stroke:#888,stroke-dasharray:4 3
+    class S05,S30,S31,S32,S33,S34,S35,S36,S37,S38,S42,S43,S44,S45 main
+    class EXP expl
 ```
 
-## Pipeline, by script number
+Everything above runs with one command:
 
-The number in each filename is its position in the original, larger
-pipeline (00-20). Numbers 00-04, 13, 18, and 19 are intentionally absent —
-see "What's excluded" below for why. Letters (`a`/`b`/`c`/`d`) mark
-variants of the same numbered step (e.g. `07` and `07b` are the continental
-and granular versions of the same reference-Beagle step), not new steps.
-The table is ordered by actual run order, which mostly but not strictly
-follows the numbers (`06` needs to run before `05c`/`05d`, for example).
+```bash
+bash bin/run_pipeline.sh
+```
+
+Inputs it needs: the three pool alignments in `bam/`, the GRCh37/b37 reference
+in `data/ref/`, and the UCSC `hgdpGeo` allele-frequency table in `data/hgdp/`.
+Every random step is seeded (20260925).
+
+To check the pipeline without any participant data, run it against the
+synthetic count set written by `bin/37` (`out_global/revision/synthetic_test/`),
+which ships with its expected output.
+
+## 1. Primary analysis
+
+These scripts produce every result in the main text.
 
 | Script | What it produces |
 |---|---|
-| `05_angsd_analysis.sh` | Per-pool allele frequencies, ACGT counts, IBS, SAF/SFS (autosomes; also supports `--chr X` for the chromosome X F<sub>ST</sub> result) |
-| `05a_fst_from_counts.R` | Table 4 — inter-pool F<sub>ST</sub> (Hudson-Bhatia, from counts) |
-| `06_build_5pop_panel.sh` | F<sub>ST</sub> reference panel: HapMap3 (8 pops) + 1KGP (5 superpopulations) |
-| `05c_continental_ancestry_v3.R` | Continental AIMs from counts |
-| `05d_fst_per_population.R` | Tables 5-6 — F<sub>ST</sub> vs. 5 superpopulations and 13 individual reference populations |
-| `11_full_genome_panels.sh` | Full-genome (chr1-22) 1KGP genotype extraction for the NGSadmix reference panels |
-| `07_build_ref_beagle.R` | Continental reference Beagle (100 individuals, 5 superpopulations) |
-| `07b_build_ref_beagle_v2.R` | Granular reference Beagle (110 individuals, 11 populations) |
-| `08_merge_beagle_ngsadmix.R` | Merges pools + continental reference Beagle |
-| `08b_merge_beagle_ngsadmix_v2.R` | Merges pools + granular reference Beagle |
-| `12_rebuild_and_run.sh` | Full pipeline: rebuilds both reference Beagles, merges, runs NGSadmix (K=2-5 continental, K=2-11 granular) and PCAngsd, runs Evanno replicates |
-| `10_evanno_deltaK.R` | Table 11 — Evanno ΔK method for optimal K |
-| `09_plot_admixture_pca.R` | Figures 3-4 — continental (K=5) admixture + PCA plots |
-| `09b_plot_admixture_pca_v2.R` | Figures 5-6 — granular (K=6) admixture + PCA plots |
-| `14_pool_focused_plots.R` | Pool-composition plots from the K=5 result |
-| `15_final_figures.R` | Final manuscript figure set |
-| `16_pool_replicates.sh` + `16b_summarize_replicates.R` | Table 8b, Figure 11 — jackknife uncertainty for the K=5 proportions |
-| `17_summarize_mixemt.R` (+ `mixemt` install) | Table 13, Figure 13 — mitochondrial haplogroup composition |
-| `20_new_findings_figures.R` | Figures 11-13 — jackknife, chromosome X F<sub>ST</sub>, and mtDNA figures |
+| `05_angsd_analysis.sh` | Per-site A/C/G/T read counts per pool (ANGSD `-doCounts -dumpCounts`, MAPQ ≥ 30, BQ ≥ 20). ANGSD is used here only as a read counter; its allele-frequency estimator assumes one diploid individual and is not used |
+| `30_build_oriented_sites.R` | 640,126 autosomal HGDP SNPs coded once as ancestral/derived; unadmixed source proxies (AFR, EUR, NAT) plus five alternatives for sensitivity |
+| `31_extract_pool_counts.sh` | Pool read counts at those sites, zero counts retained as data |
+| `32_build_common_mask.R` | One SNP mask applied to every cohort and every analysis (47,813 SNPs); QC summary |
+| `33_ancestry_counts.R` | Beta-binomial ancestry model using the real pool sizes; cohort contrasts; block jackknife; effective pool size with its interval |
+| `34_fst_poolfstat.R` | Pool-seq F<sub>ST</sub> (poolfstat ANOVA) with block jackknife |
+| `35_depth_matched.R` | Site-by-site depth matching (hypergeometric thinning) |
+| `36_sensitivity.R` | Fourteen sensitivity analyses: transversions, depth and quality filters, MAF, five alternative proxy panels, block size, reference bias |
+| `37_simulate_validation.R` | Simulation of the full design; writes the synthetic test set |
+| `38_fst_references.R` | Pool-vs-HGDP Hudson F<sub>ST</sub> on the common mask |
+| `lib_poolmix.R` | Shared model, jackknife, blocks, effective-size estimator |
 
-`lib_build_ref_beagle_panel.R` is a shared helper used by `07`/`07b`/`11`/`12`
-(not run directly).
+`run_pipeline.sh` is the entry point and runs all of the above, then the
+validation below, in order.
 
-## Software versions and setup
+## 2. Validation
 
-See `README.md` for exact tool versions (ANGSD, PCAngsd, bcftools/samtools,
-R, mixemt) and installation commands.
+| Script | What it answers |
+|---|---|
+| `42_validate_neff.R` | Does the effective-size estimator recover a known truth? Sweep over pool size, depth and contribution unevenness (480 simulated pools) |
+| `43_neff_uncertainty.R` | How precise is the effective size reported for a given library? Simulates the study as run and solves the inverse problem |
+| `44_iadmix_crosscheck.sh` | Independent implementation check with iAdmix (Bansal and Libiger 2015), which has its own likelihood, optimizer and codebase |
+| `45_iadmix_stability.sh` | How much does the iAdmix answer depend on how the run is set up: repeats, pool size, SNP subset, allele orientation |
 
-## What's excluded, and why
+### Two traps worth knowing about
 
-- **`bin/archive/`** and a long tail of duplicate/superseded scripts
-  (different pool sizes, filters, backups) — obsolete iterations found
-  during a code audit, never the version actually used.
-- **The iAdmix/GATK pipeline** (`iadmix_master_script.sh`, `run_iadmix_*.sh`,
-  `00`-`04` numbered scripts, etc.) — a complementary method whose results
-  are explicitly *not* part of this manuscript (mentioned only as "available
-  as separate supplementary material").
-- **`05a_fst_from_maf.R`** — an earlier F<sub>ST</sub> approach (MAF-based)
-  superseded by the counts-based `05a_fst_from_counts.R` actually used.
-- **`05b_compare_angsd_iadmix.R`**, **`13_pca_3d.R`** — exploratory analyses
-  not cited in the manuscript.
-- **`18_build_X_panel_and_run.sh`, `19a_prepare_y_markers_and_counts.sh`,
-  `19_y_haplogroup_mixture.R`** — extensions to chromosomes X and Y built
-  and run during the audit, but their results failed a basic sanity check
-  (see git history / commit messages for the full explanation) and are not
-  in the manuscript.
+Both are silent: no error, no warning, a plausible-looking wrong answer.
 
-## ⚠️ Methodological limitation: pools treated as diploid pseudo-individuals
+**Allele orientation.** Pairing read counts with the frequency of the *other*
+allele changes the African-related estimate from 14% to 47%. `bin/44` runs both
+orientations and keeps the one the program itself scores higher; the two differ
+by a factor of about 30 in log-likelihood, so the choice is unambiguous.
 
-`NGSadmix` and `PCAngsd` consume the Beagle format, which encodes only 3
-states per site (AA/Aa/aa) — diploid by design. Each pool (POOL1/POOL2/
-HOSPITAL: 50, 50 and 200 real individuals) is represented as **a single diploid
-pseudo-individual**, not a weighted population frequency. This is not a bug
-fixable with a flag — there is no way to tell NGSadmix/PCAngsd "this is a
-pool of 50 people."
+**Pool size in chromosomes.** iAdmix's `-p` is the number of chromosomes, not of
+people: 100 for a 50-person pool. `bin/45` shows this one is forgiving — it
+moves the answer by about 0.3 percentage points.
 
-- Analyses based on direct ACGT counts (`05a_fst_from_counts.R`,
-  `05c_continental_ancestry_v3.R`) **do not have this problem**.
-- `bin/16_pool_replicates.sh` quantifies uncertainty via a delete-one-
-  chromosome block jackknife (22 replicates). It does **not** correct the
-  underlying pseudo-individual bias — it only measures how much the
-  estimate varies with which part of the genome is used.
+## 3. Exploratory (supplementary material only)
 
-See the header comment in each script for the full warning text.
+Genotype-likelihood analyses that preceded the count-based model. They are
+reported in the supplement as exploratory and carry none of the conclusions:
+NGSadmix and PCAngsd consume the Beagle format, which represents each pool as a
+single diploid pseudo-individual and discards the pool size entirely.
 
-## Revised analysis (Phase 2 of the September 2026 revision memo)
+| Script | What it produces |
+|---|---|
+| `06_build_5pop_panel.sh` | Reference panel for the genotype-likelihood route |
+| `11_full_genome_panels.sh` | 1000 Genomes genotype extraction |
+| `07_build_ref_beagle.R`, `07b_build_ref_beagle_v2.R` | Reference Beagle files (continental, granular) |
+| `08_merge_beagle_ngsadmix.R`, `08b_…_v2.R` | Merge pools with the reference |
+| `12_rebuild_and_run.sh` | Runs NGSadmix and PCAngsd across K |
+| `10_evanno_deltaK.R` | Evanno ΔK |
+| `09_plot_admixture_pca.R`, `09b_…_v2.R`, `14_pool_focused_plots.R`, `15_final_figures.R` | Plots |
+| `lib_build_ref_beagle_panel.R` | Shared helper |
 
-Scripts `30`–`39` replace the ancestry and differentiation results above as
-primary evidence; NGSadmix/PCAngsd (`07`–`15`) become exploratory. Run all of
-it with `bash bin/39_run_revision.sh`. Outputs go to `out_global/revision/`.
+One input of this route cannot be regenerated: `pools_hapmap3.beagle.gz` was
+produced by an ANGSD command preserved only in its own `.arg` file, which reads
+two site lists that were written to `/tmp` and no longer exist. This is stated
+in `DATA_AVAILABILITY.md`.
 
-| Script | What it does | Memo items |
-|---|---|---|
-| `30_build_oriented_sites.R` | 640k HGDP SNPs coded once as ancestral/derived; unadmixed proxies AFR (Yoruba, Mandenka), EUR (French, Basque, Italian, Tuscan, Sardinian), NAT (Maya, Pima, Karitiana, Surui, Colombian) | A4, A7 |
-| `31_extract_pool_counts.sh` | ACGT read counts of each pool at those sites, zeros kept | A5 |
-| `32_build_common_mask.R` | One mask for every pool and analysis; QC summary | A6, C1 |
-| `33_ancestry_counts.R` | Beta-binomial ancestry model with real pool sizes, block jackknife, Delta_HUN and POOL1-POOL2, effective pool sizes | A2, A9 |
-| `34_fst_poolfstat.R` | poolfstat ANOVA FST with block jackknife | A3 |
-| `35_depth_matched.R` | Site-by-site depth matching (hypergeometric thinning) | A10 |
-| `36_sensitivity.R` | Transversions, depth/QC/MAF filters, alternative proxies, block size, reference-bias diagnostic | S7, S8 |
-| `37_simulate_validation.R` | Simulation of the full design; writes a small synthetic test set | A8, C5 |
-| `38_fst_references.R` | Pool-vs-HGDP Hudson FST on the common mask (supplement) | A6 |
-| `lib_poolmix.R` | Shared model, jackknife and block helpers | — |
+## Removed from this repository
 
-Pool sizes used everywhere: POOL1 = 50, POOL2 = 50, HOSPITAL = 200 people.
+Seven scripts were removed once the analyses they produced were retracted or
+dropped. They remain in the git history and can be recovered with `git show`.
+
+- `05a_fst_from_counts.R`, `05c_continental_ancestry_v3.R`,
+  `05d_fst_per_population.R` — the earlier F<sub>ST</sub> route. It defined the
+  minor allele separately within each pool, averaged per-site ratios instead of
+  taking a ratio of sums, and used thresholds other than those its output was
+  described with. The tables it produced are superseded by `bin/34` and `bin/38`.
+- `16_pool_replicates.sh`, `16b_summarize_replicates.R` — jackknife over the
+  genotype-likelihood results, superseded by the jackknife in `bin/33`.
+- `17_summarize_mixemt.R`, `20_new_findings_figures.R` — mitochondrial and
+  chromosome X analyses, and their figures. Both analyses were dropped: sex
+  composition is unknown, and read proportions from a mixed mitochondrial
+  library are not maternal haplogroup frequencies.
+
+## Software
+
+ANGSD 0.940; samtools 1.23 and bcftools 1.23; R 4.5.2 with data.table 1.18.2
+and poolfstat 3.1.0; bwa 0.7.17 and 0.7.19; Sentieon 202010.04; iAdmix
+(compiled from the source in `data/iadmix/`). Pool sizes used throughout:
+POOL1 = 50, POOL2 = 50, HOSPITAL = 200 people.

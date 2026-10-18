@@ -39,7 +39,7 @@ filtering, the direction of the estimator and the summary calculations
 against known expected values.
 
 **Reproducible given access to the BAMs** (see the route above), by running
-`bash bin/39_run_revision.sh`: the whole revised autosomal analysis —
+`bash bin/run_pipeline.sh`: the whole revised autosomal analysis —
 oriented SNP set, common mask, count-based ancestry model, Pool-seq
 F<sub>ST</sub>, depth matching, sensitivity analyses and simulation. Every
 random step is seeded (20260925). Reference data are downloaded separately:
