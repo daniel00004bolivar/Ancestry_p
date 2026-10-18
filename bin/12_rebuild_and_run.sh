@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # METHODOLOGICAL WARNING: NGSadmix and PCAngsd (Step 3 and 4 of this script)
-# receive each pool (POOL1/POOL2/HOSPITAL, ~50 real individuals each) as ONE
+# receive each pool (POOL1/POOL2/HOSPITAL: 50/50/200 real individuals) as ONE
 # diploid pseudo-individual. The Beagle format only allows 3 states per site
 # (AA/Aa/aa) -- a structural limitation of the format, not configurable. The
 # resulting proportions should be interpreted as the pool's population

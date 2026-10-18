@@ -140,3 +140,9 @@ nuevoshallazgos.ods
 ~$*.docx
 Rplots.pdf
 *.Rhistory
+
+# Paquete de intermedios para compartir en privado (datos derivados de participantes)
+archivos_intermedios/
+
+# Manuscript build script: reads manuscrito_G3/, which this repo excludes
+bin/41_build_docx.sh

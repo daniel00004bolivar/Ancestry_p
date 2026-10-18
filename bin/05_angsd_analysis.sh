@@ -19,7 +19,7 @@
 # EXTENDED METHODOLOGICAL WARNING: this is not just a GL bias in this
 # script -- it propagates downstream to NGSadmix/PCAngsd (bin/08*, bin/09*),
 # which represent each pool as ONE diploid pseudo-individual with no way to
-# indicate its real size (~50 individuals). See bin/README_VIGENTE.md and
+# indicate its real size (50, 50 and 200 individuals). See bin/README_VIGENTE.md and
 # bin/16_pool_replicates.sh (uncertainty quantification via block jackknife).
 #
 # Usage:

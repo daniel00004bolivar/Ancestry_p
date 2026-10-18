@@ -4,7 +4,7 @@
 # ESN, GWD, LWK, PEL, MXL, PUR, FIN, CLM) to pseudo-Beagle format.
 #
 # METHODOLOGICAL WARNING: the resulting Beagle feeds NGSadmix/PCAngsd, which
-# represent each pool (POOL1/POOL2/HOSPITAL, ~50 real individuals each) as
+# represent each pool (POOL1/POOL2/HOSPITAL: 50/50/200 real individuals) as
 # ONE diploid pseudo-individual -- a structural limitation of the Beagle
 # format (3 states per site: AA/Aa/aa), not configurable. See
 # bin/README_VIGENTE.md and bin/16_pool_replicates.sh.
