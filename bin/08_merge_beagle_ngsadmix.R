@@ -8,7 +8,7 @@
 # individual) -- a structural limitation of the Beagle format, not
 # configurable. NGSadmix/PCAngsd proportions should be read as the pool's
 # population average, not individual ancestry. See bin/README_VIGENTE.md and
-# bin/16_pool_replicates.sh.
+# bin/33_ancestry_counts.R.
 suppressPackageStartupMessages(library(data.table))
 cat("[NOTE] pools treated as diploid pseudo-individuals -- see bin/README_VIGENTE.md\n")
 

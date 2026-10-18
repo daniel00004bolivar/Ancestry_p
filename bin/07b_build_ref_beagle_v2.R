@@ -7,7 +7,7 @@
 # represent each pool (POOL1/POOL2/HOSPITAL: 50/50/200 real individuals) as
 # ONE diploid pseudo-individual -- a structural limitation of the Beagle
 # format (3 states per site: AA/Aa/aa), not configurable. See
-# bin/README_VIGENTE.md and bin/16_pool_replicates.sh.
+# bin/README_VIGENTE.md and bin/33_ancestry_counts.R.
 suppressPackageStartupMessages(library(data.table))
 
 # This script is always invoked from PROJ_DIR (the calling .sh scripts do

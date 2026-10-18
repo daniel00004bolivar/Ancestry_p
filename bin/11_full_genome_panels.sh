@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-PROJ_DIR="/Users/danielbolivar/Downloads/Ancestria"
+PROJ_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$PROJ_DIR"
 
 SAMPLES_V1="/tmp/ref_sample_order.txt"

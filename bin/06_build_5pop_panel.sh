@@ -11,7 +11,7 @@
 # bin/09*), which represent each pool (POOL1/POOL2/HOSPITAL: 50/50/200 real
 # individuals each) as ONE diploid pseudo-individual -- a structural
 # limitation of the Beagle format, not configurable. See
-# bin/README_VIGENTE.md and bin/16_pool_replicates.sh.
+# bin/README_VIGENTE.md.
 #
 # Usage: bash bin/06_build_5pop_panel.sh
 set -euo pipefail
@@ -128,4 +128,4 @@ total=$(wc -l < "$FINAL_PANEL")
 echo "Panel combinado: $((total - 1)) SNPs → ${FINAL_PANEL}"
 echo ""
 echo "Listo. Ejecutar ahora:"
-echo "  Rscript bin/05c_continental_ancestry_v3.R"
+echo "  Rscript bin/38_fst_references.R"

@@ -20,7 +20,7 @@
 # script -- it propagates downstream to NGSadmix/PCAngsd (bin/08*, bin/09*),
 # which represent each pool as ONE diploid pseudo-individual with no way to
 # indicate its real size (50, 50 and 200 individuals). See bin/README_VIGENTE.md and
-# bin/16_pool_replicates.sh (uncertainty quantification via block jackknife).
+# bin/33_ancestry_counts.R (ancestry and uncertainty, via block jackknife).
 #
 # Usage:
 #   bash bin/05_angsd_analysis.sh [options]
@@ -270,20 +270,6 @@ if [[ -n "$REF" ]]; then
 else
     log "--- [4/4] SKIPPED: SFS/FST via realSFS (pass --ref to enable it) ---"
     log "    To download the b37 reference: see the README at the end of this script"
-fi
-
-# ══════════════════════════════════════════════════════════════════════════════
-# POST-PROCESSING: Hudson FST from counts (no reference needed)
-# Produces an FST table for the 3 pool pairs using allele counts.
-# Hudson et al. 1992 estimator: Fst = 1 - (Hs/Ht)
-# Only runs if not --dry-run and if the counts files exist.
-# ══════════════════════════════════════════════════════════════════════════════
-if ! $DRY_RUN; then
-    log "--- Post-proc: Hudson FST from counts (no reference) ---"
-    Rscript "$SCRIPT_DIR/05a_fst_from_counts.R" \
-        --counts_dir "$OUT_DIR/per_pool" \
-        --out "$OUT_DIR/fst/hudson_fst_summary.tsv" \
-        2>&1 | sed 's/^/    /' || log "  (R script pending or post-proc error)"
 fi
 
 log "=== ANGSD analysis complete ==="

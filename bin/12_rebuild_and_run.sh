@@ -7,7 +7,7 @@ set -euo pipefail
 # (AA/Aa/aa) -- a structural limitation of the format, not configurable. The
 # resulting proportions should be interpreted as the pool's population
 # average, not individual ancestry.
-# See bin/16_pool_replicates.sh for an uncertainty estimate via block
+# See bin/33_ancestry_counts.R for the uncertainty estimate used in the paper, via block
 # jackknife, and bin/README_VIGENTE.md for full detail.
 
 PROJ_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
