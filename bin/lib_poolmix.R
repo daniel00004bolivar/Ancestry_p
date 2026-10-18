@@ -76,8 +76,16 @@ fit_pool <- function(x, d, Fm, nk, twoN, err, refder = NULL, starts = START_Q) {
 # observed read fractions around the fitted expectation. The part shared by
 # all pools (proxy mismatch) is calibrated on the reference pools, assumed to
 # behave as their nominal size: excess_p = 1/(2 N_eff,p) + m.
+# The per-site excess is a ratio of sums, not a mean of per-site ratios: sites
+# where h is near 0 or 1 carry almost no information and a per-site ratio
+# divides by h(1-h) there, which is numerically unstable and, when a proxy
+# frequency is exactly 0 or 1, undefined. (Same distinction that matters for
+# F_ST; see bin/38.)
 effective_sizes <- function(xs, ds, hs, nominal, reference_pools) {
-    ex <- mapply(function(x, d, h) mean(((x / d - h)^2 - h * (1 - h) / d) / (h * (1 - h))), xs, ds, hs)
+    ex <- mapply(function(x, d, h) {
+        v <- h * (1 - h)
+        sum((x / d - h)^2 - v / d) / sum(v)
+    }, xs, ds, hs)
     m  <- mean(ex[reference_pools] - 1 / (2 * nominal[reference_pools]))
     neff <- 1 / (2 * pmax(ex - m, 1e-6))
     neff[reference_pools] <- nominal[reference_pools]

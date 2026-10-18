@@ -45,14 +45,23 @@ err <- sapply(POOLS, function(p)
 # One function fits all three pools on a subset, so each jackknife replicate
 # drops the same block from every pool.
 warm <- NULL                                   # full-data q per pool, set after the full fit
+# Effective sizes are computed inside fit_all, so the block jackknife gives
+# them a standard error like every other reported quantity.
 fit_all <- function(keep) {
-    unlist(lapply(POOLS, function(p) {
+    qs <- lapply(setNames(POOLS, POOLS), function(p) NULL)
+    v <- unlist(lapply(POOLS, function(p) {
         r <- fit_pool(tab[[paste0("x_", p)]][keep], tab[[paste0("d_", p)]][keep],
                       Fm[keep, , drop = FALSE], nk, 2 * POOL_N[[p]], err[[p]],
                       if (REFBIAS) refder[keep] else NULL,
                       starts = if (is.null(warm)) START_Q else list(warm[[p]]))
+        qs[[p]] <<- r[paste0("q_", SOURCES)]
         setNames(r[PARAMS], paste0(p, ".", PARAMS))
     }))
+    es <- effective_sizes(lapply(POOLS, function(p) tab[[paste0("x_", p)]][keep]),
+                          lapply(POOLS, function(p) tab[[paste0("d_", p)]][keep]),
+                          lapply(POOLS, function(p) drop(Fm[keep, , drop = FALSE] %*% qs[[p]])),
+                          POOL_N[POOLS], reference_pools = c(1, 2))
+    c(v, setNames(es$n_eff, paste0(POOLS, ".n_eff")))
 }
 
 t0 <- Sys.time()
@@ -70,14 +79,15 @@ anc <- rbindlist(lapply(POOLS, function(p) rbindlist(lapply(PARAMS, function(v) 
 anc[, `:=`(n_sites = nrow(tab), n_blocks = length(unique(blocks)), error_rate = err[pool],
            refs = paste(REFS, collapse = ","), tag = TAG)]
 
-# ── Effective pool sizes (see effective_sizes in lib_poolmix.R) ─────────────
-hs <- lapply(POOLS, function(p) drop(Fm %*% jk$est[paste0(p, ".q_", SOURCES)]))
-es <- effective_sizes(lapply(POOLS, function(p) tab[[paste0("x_", p)]]),
-                      lapply(POOLS, function(p) tab[[paste0("d_", p)]]), hs,
-                      POOL_N[POOLS], reference_pools = c(1, 2))
-N_EFF <- setNames(es$n_eff, POOLS)
-anc[, n_eff := N_EFF[pool]]
-cat(sprintf("Effective pool size (people): %s\n", paste(sprintf("%s %.0f", POOLS, N_EFF), collapse = ", ")))
+# ── Effective pool sizes, with their jackknife standard errors ──────────────
+N_EFF    <- setNames(jk$est[paste0(POOLS, ".n_eff")], POOLS)
+N_EFF_SE <- setNames(jk$se[paste0(POOLS, ".n_eff")], POOLS)
+anc[, `:=`(n_eff = N_EFF[pool], n_eff_se = N_EFF_SE[pool],
+           n_eff_lo95 = pmax(1, N_EFF[pool] - 1.96 * N_EFF_SE[pool]),
+           n_eff_hi95 = N_EFF[pool] + 1.96 * N_EFF_SE[pool])]
+cat(sprintf("Effective pool size (people): %s\n",
+            paste(sprintf("%s %.0f (95%% CI %.0f-%.0f)", POOLS, N_EFF,
+                          pmax(1, N_EFF - 1.96 * N_EFF_SE), N_EFF + 1.96 * N_EFF_SE), collapse = ", ")))
 
 # ── Contrasts, computed inside every replicate so they keep the covariance ───
 g <- nrow(jk$reps)
