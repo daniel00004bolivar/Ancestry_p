@@ -55,7 +55,7 @@ GROUPS <- list(
 )
 
 cat("Reading HGDP table...\n")
-h <- fread(cmd = paste("gzcat", HGDP_FILE), sep = "\t", header = FALSE,
+h <- fread(HGDP_FILE, sep = "\t", header = FALSE,
            col.names = c("bin", "chrom", "start", "end", "rsid", "anc", "der", "freqs"))
 h <- h[chrom %in% paste0("chr", 1:22)]
 fr <- tstrsplit(sub(",$", "", h$freqs), ",", fixed = TRUE)

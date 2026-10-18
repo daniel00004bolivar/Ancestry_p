@@ -22,6 +22,9 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
+# Stop early if this machine is missing something the pipeline needs.
+Rscript bin/00_check_requirements.R
+
 Rscript bin/30_build_oriented_sites.R
 bash    bin/31_extract_pool_counts.sh
 Rscript bin/32_build_common_mask.R

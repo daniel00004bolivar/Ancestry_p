@@ -20,7 +20,9 @@ flowchart TD
 
     subgraph PREP["1 · Data preparation"]
         direction TB
+        S00["00_check_requirements.R<br/>01_fetch_reference_data.sh<br/><i>setup</i>"]
         S05["05_angsd_analysis.sh<br/><i>A/C/G/T counts per site</i>"]
+        S00 --> S05
         S30["30_build_oriented_sites.R<br/><i>640k SNPs, fixed orientation,<br/>unadmixed proxies</i>"]
         S31["31_extract_pool_counts.sh<br/><i>counts at those sites, zeros kept</i>"]
         S32["32_build_common_mask.R<br/><i>one mask: 47,813 SNPs</i>"]
@@ -72,9 +74,29 @@ Everything above runs with one command:
 bash bin/run_pipeline.sh
 ```
 
-Inputs it needs: the three pool alignments in `bam/`, the GRCh37/b37 reference
-in `data/ref/`, and the UCSC `hgdpGeo` allele-frequency table in `data/hgdp/`.
-Every random step is seeded (20260925).
+## Running it on another machine
+
+```bash
+Rscript bin/00_check_requirements.R     # what is missing, before anything long starts
+bash    bin/01_fetch_reference_data.sh  # downloads the two public reference files
+bash    bin/run_pipeline.sh             # the analysis
+```
+
+Requirements: R >= 4.1 with `data.table` (>= 1.14) and `poolfstat` (>= 3.0);
+samtools; gzip; awk; a C compiler for the two iAdmix scripts; and ANGSD, but
+only for `bin/05`, which produces the read counts — if those already exist the
+rest of the pipeline does not need it. Tested on macOS (Apple silicon) and
+written to be POSIX-portable; on Windows `parallel::mclapply` does not fork, so
+the jackknife and the simulations run serially and take considerably longer.
+
+Reference data are public but too large for the repository, so
+`bin/01_fetch_reference_data.sh` downloads them: the UCSC `hgdpGeo` allele
+frequencies (~53 MB) and the GRCh37/b37 reference genome (~3 GB), which it also
+indexes. The three pool alignments in `bam/` are controlled access; see
+`DATA_AVAILABILITY.md`.
+
+Every random step is seeded (20260925), so two machines should produce
+identical output.
 
 To check the pipeline without any participant data, run it against the
 synthetic count set written by `bin/37` (`out_global/revision/synthetic_test/`),
@@ -86,6 +108,8 @@ These scripts produce every result in the main text.
 
 | Script | What it produces |
 |---|---|
+| `00_check_requirements.R` | Verifies tools, R packages and input files, and stops the run early if something is missing |
+| `01_fetch_reference_data.sh` | Downloads and indexes the two public reference files |
 | `05_angsd_analysis.sh` | Per-site A/C/G/T read counts per pool (ANGSD `-doCounts -dumpCounts`, MAPQ ≥ 30, BQ ≥ 20). ANGSD is used here only as a read counter; its allele-frequency estimator assumes one diploid individual and is not used |
 | `30_build_oriented_sites.R` | 640,126 autosomal HGDP SNPs coded once as ancestral/derived; unadmixed source proxies (AFR, EUR, NAT) plus five alternatives for sensitivity |
 | `31_extract_pool_counts.sh` | Pool read counts at those sites, zero counts retained as data |

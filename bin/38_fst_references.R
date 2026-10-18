@@ -38,7 +38,7 @@ ALL_POPS <- c("Adygei","Balochi","BantuKenya","BantuSouthAfrica","Basque","Bedou
               "Uygur","Xibo","Yakut","Yi","Yoruba")
 
 tab <- fread(file.path(OUT_DIR, "analysis_table.tsv.gz"))[mask_main == TRUE]
-h <- fread(cmd = "gzcat data/hgdp/hgdpGeo.txt.gz", sep = "\t", header = FALSE,
+h <- fread("data/hgdp/hgdpGeo.txt.gz", sep = "\t", header = FALSE,
            col.names = c("bin", "chrom", "start", "end", "rsid", "anc", "der", "freqs"))
 h <- h[chrom %in% paste0("chr", 1:22)][, `:=`(chr = as.integer(sub("chr", "", chrom)), pos = end)]
 h <- unique(h, by = c("chr", "pos"))[tab[, .(chr, pos)], on = c("chr", "pos"), nomatch = NULL]
